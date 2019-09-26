@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Pontedera base map</title>
+    <!-- leaflet.css -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
+    <!-- css -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- leaflet1.5.1 -->
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+    <!-- jquery3.4.1 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- turf@5 -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+    <!-- data -->
+    <script src="js/pontedera_admin_boundary.js"></script>
+    <script src="geoJSON/pontedera_wgs84.geojson"></script>
+    <script src="js/firenze_admin_boundary.js"></script>
+    <script src="geoJSON/firenze_wgs84.geojson"></script>
+    <!-- Adding Font Awesome to the application -->
+    <!-- https://cdnjs.com/libraries/font-awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/fontawesome.css">
+    <!-- leaflet-elevation.js - https://github.com/Raruto/leaflet-elevation-->
+    <!-- D3.js -->
+    <script src="https://unpkg.com/d3@4.13.0/build/d3.min.js" charset="utf-8"></script>
+    <!-- leaflet-gpx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.4.0/gpx.js"></script>
+    <!-- leaflet-elevation -->
+    <link rel="stylesheet" href="https://unpkg.com/@raruto/leaflet-elevation@latest/leaflet-elevation.css" />
+    <script src="https://unpkg.com/@raruto/leaflet-elevation@latest/leaflet-elevation.js"></script>
+
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id='selector_menu'>
+			<select id='selector'>
+				<option value='reset'>All cities</option>
+				<option value='spain'>Spain</option>
+				<option value = 'france'>France</option>
+				<option value='portugal'>Portugal</option>
+				<option value = 'italy'>Italy</option>
+				<option value='germany'>Germany</option>
+				<option value = 'uk'>United Kingdom</option>
+				<option value='ireland'>Ireland</option>
+			</select>
+		</div>
+    <!-- Adding a checkbox -->
+    <label>
+      <input type="checkbox" name="zoom" value="zoom" id="cbZoom" checked>
+      Zoom Control
+    </label>
+
+    <script type="text/javascript">
+      var map = L.map('map', {
+        center: [43.6625, 10.6364],
+        zoom: 13,
+        // zoomSnap: 0.25,
+        // zoomDelta: 0.25,
+        //10.5506657407215485,43.5899199999999993 : 10.7262086542216739,43.700873299698841
+      //   maxBounds: [
+      //   [43.58991,10.55066],
+      //   [43.70087,10.72620]
+      // ],
+      minZoom: 13
+      });
+
+      // http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+      var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      	maxZoom: 19,
+      	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      });
+
+      var Wikimedia = L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', {
+      	attribution: '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>',
+      	minZoom: 1,
+      	maxZoom: 19
+      });
+      var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      	maxZoom: 17,
+      	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+      });
+
+      var basemaps = {
+        "OpenStreetMap": OpenStreetMap_Mapnik,
+        "Wikimedia": Wikimedia,
+        "Esri WorldImagery": Esri_WorldImagery,
+        "OpenTopoMap": OpenTopoMap
+      };
+      // bbox layer
+      // var bbox = L.rectangle([[43.58991,10.55066],[43.70087,10.72620]]).addTo(map);
+      //
+      //
+      // PONTEDERA
+      var pontedera = L.geoJSON(pontedera_admin_boundary);
+      // pontedera.addTo(map);
+      var pontedera_bounds = pontedera.getBounds();
+      map.fitBounds(pontedera_bounds);
+
+      var pontedera_mask = L.geoJSON(turf.mask(pontedera_geom),{
+        "fillOpacity": 0.6,
+        color: '#000000',
+        fillColor: "red",
+        weight: 0.1}
+        ).addTo(map);
+
+        // FIRENZE
+        var firenze = L.geoJSON(firenze_admin_boundary);
+        // pontedera.addTo(map);
+        var firenze_bounds = firenze.getBounds();
+        map.fitBounds(firenze_bounds);
+
+        var firenze_mask = L.geoJSON(turf.mask(firenze_geom),{
+          "fillOpacity": 0.6,
+          color: '#000000',
+          fillColor: "red",
+          weight: 0.1}
+          );
+
+
+
+
+
+      // wms carta_geologica
+      // var carta_geologica = L.tileLayer.wms('http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/Vettoriali/Carta_geologica.map', {
+      //   layers: 'GE.CARTAGEOLOGICA',
+      //   crs: L.CRS.EPSG4326
+      // }).addTo(map);
+
+      var overlays = {
+      "external boundary": pontedera_mask,
+      "Pontedera boundary": pontedera,
+      "Firenze boundary": firenze_mask
+      // "carta_geologica": carta_geologica
+      };
+
+      var control = L.control.layers(basemaps, overlays, {
+        collapsed: false
+      });
+    control.addTo(map);
+
+      // Adding a Scale Bar to the Map
+      L.control.scale({
+        position: 'bottomright',
+        'imperial': false
+      }
+        ).addTo(map);
+
+
+
+
+
+      // Toggling a control using a checkbox
+      // function checkUncheckZoom() {
+      //   if (document.getElementById('cbZoom').checked) {
+      //     document.getElementsByClassName('leaflet-control-zoom')[0].style.display = 'block';
+      //     document.getElementsByClassName('leaflet-control-scale')[0].style.display = 'block';
+      //     document.getElementsByClassName('leaflet-control-layers')[0].style.display = 'block';
+      //     document.getElementsByClassName('leaflet-control-attribution')[0].style.display = 'block';
+      //   } else {
+      //     document.getElementsByClassName('leaflet-control-zoom')[0].style.display = 'none';
+      //     document.getElementsByClassName('leaflet-control-scale')[0].style.display = 'none';
+      //     document.getElementsByClassName('leaflet-control-layers')[0].style.display = 'none';
+      //     document.getElementsByClassName('leaflet-control-attribution')[0].style.display = 'none';
+      //   }
+      // }
+      // document.getElementById("cbZoom").onclick = checkUncheckZoom;
+
+    </script>
+  </body>
+</html>

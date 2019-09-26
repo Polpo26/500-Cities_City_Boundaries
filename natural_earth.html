@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Naturla Eatrh base map</title>
+    <!-- leaflet.css -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
+    <!-- css -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- leaflet1.5.1 -->
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+    <!-- jquery3.4.1 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <!-- leaflet-ajax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.js"></script>
+    <!-- turf@5 -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+    <!-- data -->
+    <script src="js/pontedera_admin_boundary.js"></script>
+    <script src="geoJSON/pontedera_wgs84.geojson"></script>
+
+
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="elevation-div"></div>
+
+    <script type="text/javascript">
+      var map = L.map('map', {
+        center: [0, 0],
+        zoom: 2
+      });
+
+      // http://leaflet-extras.github.io/leaflet-providers/preview/index.html
+      var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      	maxZoom: 19,
+      	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      });
+
+      var Wikimedia = L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}{r}.png', {
+      	attribution: '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a>',
+      	minZoom: 1,
+      	maxZoom: 19
+      });
+      var OpenTopoMap = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      	maxZoom: 17,
+      	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+      });
+
+      var basemaps = {
+        "OpenStreetMap": OpenStreetMap_Mapnik,
+        "Wikimedia": Wikimedia,
+        "Esri WorldImagery": Esri_WorldImagery,
+        "OpenTopoMap": OpenTopoMap
+      };
+
+
+      function assignPopup(feature, layer) {
+          var name = feature.properties.name;
+          layer.bindPopup(name);
+      }
+      var style = {
+        radius: 5,
+        fillColor: "red",
+        color: "green",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      };
+
+      var ne_110m_populated_places_simple =
+      new L.GeoJSON.AJAX("https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_populated_places_simple.geojson", {
+        pointToLayer: function(feature, latlng) {
+        var pop_max = feature.properties.pop_max/1000000;
+        var rating = feature.properties.rank_max;
+        if (rating < 5) {
+          style.fillColor = 'red';
+          style.radius = 5;
+        } else {
+          style.fillColor = 'black';
+        }
+        return L.circleMarker(latlng, style);
+      },
+      onEachFeature: assignPopup
+
+    });
+
+      ne_110m_populated_places_simple.addTo(map);
+
+      var ne_110m_admin_0_countries =
+      new L.GeoJSON.AJAX("https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson", {
+          onEachFeature: assignPopup
+      });
+
+      var ne_110m_rivers_lake_centerlines =
+      new L.GeoJSON.AJAX("https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_rivers_lake_centerlines.geojson", {
+          onEachFeature: assignPopup
+      });
+
+
+
+
+
+
+      var overlays = {
+      "ne_110m_populated_places_simple": ne_110m_populated_places_simple,
+      "ne_110m_rivers_lake_centerlines": ne_110m_rivers_lake_centerlines,
+      "ne_110m_admin_0_countries": ne_110m_admin_0_countries
+      };
+
+
+map.whenReady(function() {
+      L.control.layers(basemaps, overlays, {
+        collapsed: false
+      }).addTo(map);
+
+
+      // Adding a Scale Bar to the Map
+      L.control.scale({
+        position: 'bottomright',
+        'imperial': false
+      }).addTo(map);
+})
+
+    </script>
+  </body>
+</html>
